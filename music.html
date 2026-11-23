@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BK공방 뮤직비디오</title>
+<meta name="theme-color" content="#7c3aed">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&family=Black+Han+Sans&family=Jua&family=Gowun+Batang:wght@700&family=Nanum+Pen+Script&display=swap">
+<link rel="stylesheet" href="app.css">
+<script>/* 🔒 「BK공방 뮤직」(LITE 또는 PRO) 라이선스가 있는 휴대폰에서만 열려요 */window.BK_PROG='gb_music_ok';window.BK_PNAME='BK공방 뮤직비디오';</script>
+<script src="license.js"></script>
+</head>
+<body>
+<header>
+  <h1><a href="./" class="home">🏠</a> 🎵 BK공방 <b>뮤직비디오</b></h1>
+  <div class="sub" id="pname">노래 → 가사 → 장면 → 그림·영상 → 효과 → 완성(MP4)</div>
+  <nav id="nav" class="n6">
+    <button data-t="song">① 노래</button><button data-t="lyr">② 가사</button><button data-t="scn">③ 장면</button><button data-t="img">④ 그림</button><button data-t="fx">⑤ 효과</button><button data-t="make">⑥ 완성</button>
+  </nav>
+</header>
+<main>
+  <div class="now" id="now"></div>
+
+  <!-- ① 노래 -->
+  <section class="tab" id="t-song">
+    <div class="card"><h2>① 노래</h2>
+      <p class="hint">이미 노래(MP3)가 있으면 바로 <b>「🎵 노래 파일 넣기」</b>. 없으면 아래 「수노로 노래 만들기」부터 하세요.</p>
+      <label class="f">노래 제목</label><input type="text" id="title" placeholder="예) 엄마의 봄날">
+      <button class="btn" id="pickSong">🎵 노래 파일 넣기 (MP3)</button>
+      <div id="songInfo" class="hint"></div><audio id="aud" controls style="display:none;width:100%;margin-top:8px"></audio>
+    </div>
+    <div class="card"><h2>🎼 수노로 노래 만들기 (노래가 없을 때)</h2>
+      <label class="f">노래 주제 · 이야기</label><textarea id="topic" rows="3" placeholder="예) 고생하신 엄마께 드리는 봄날 같은 노래"></textarea>
+      <label class="f">장르 · 분위기</label><div class="chips" id="genre"></div>
+      <label class="f">쓸 AI</label><div class="chips" id="ai"><button data-v="chatgpt">ChatGPT</button><button data-v="gemini">제미나이</button></div>
+      <button class="btn" id="copySong">📋 ① 노래(가사·스타일·제목) 요청문 복사</button>
+      <button class="btn" id="openAI">🤖 ② AI 열기 (붙여 넣고 보내기)</button>
+      <button class="btn" id="openSuno">🎵 ③ 수노 열기 (가사 · 스타일 · 제목 붙여 넣고 만들기 → MP3 받기)</button>
+      <p class="hint" style="margin-top:10px">수노에서 받은 MP3를 위의 「🎵 노래 파일 넣기」로 넣고, AI가 준 <b>가사</b>는 ② 가사에 붙여 넣어요. 내가 만든 노래만 쓰세요(남의 노래는 유튜브 저작권 문제).</p>
+    </div>
+  </section>
+
+  <!-- ② 가사 -->
+  <section class="tab" id="t-lyr">
+    <div class="card"><h2>② 가사</h2>
+      <p class="hint">가사를 붙여 넣으세요. <b>[Verse] [Chorus]</b> 같은 표시는 저절로 빠져요. <b>[0:15]</b>처럼 시간이 있으면 그 시간에 자막이 나와요(없으면 노래에 고르게 나눠요).</p>
+      <textarea id="lyrics" rows="10" placeholder="가사를 여기에 붙여 넣기"></textarea>
+      <button class="btn" id="applyLyr">✅ 가사 넣기</button>
+      <div id="lyrInfo" class="hint"></div>
+      <label class="chk"><input type="checkbox" id="capOn"> 💬 영상에 가사 자막 넣기</label>
+      <label class="f">가사 자막 모양</label><div class="chips" id="capSt"></div>
+    </div>
+  </section>
+
+  <!-- ③ 장면 -->
+  <section class="tab" id="t-scn">
+    <div class="card"><h2>③ 장면 나누기 · 기획</h2>
+      <label class="f">화면 모양</label><div class="chips" id="ratio"><button data-v="16:9">🖥 가로 (유튜브)</button><button data-v="9:16">📱 세로 (쇼츠)</button></div>
+      <label class="f">한 장면 길이</label><div class="chips" id="sceneLen"><button data-v="8">8초 (Flow 영상과 같음)</button><button data-v="10">10초</button><button data-v="12">12초 (그림 수 줄이기)</button></div>
+      <label class="f">그림 느낌</label><div class="chips" id="style"></div>
+      <label class="f">주인공 (비워 두면 AI가 가사 보고 정해요)</label><input type="text" id="hero" placeholder="예) 60대 한국 여성, 짧은 파마머리, 분홍 카디건">
+      <p class="hint" id="scnSum" style="margin-top:12px"></p>
+      <button class="btn" id="copyPlan">📋 ① 장면 기획 요청문 복사</button>
+      <button class="btn" id="openAI2">🤖 ② AI 열기 (붙여 넣고 보내기)</button>
+      <label class="f">③ AI가 준 장면 설명을 여기에 붙여 넣기</label>
+      <textarea id="planAns" rows="5" placeholder="### 장면 1 … 모양의 답을 붙여 넣기"></textarea>
+      <button class="btn" id="applyPlan">✅ ④ 장면 설명 넣기</button>
+    </div>
+    <div id="scnList" class="list"></div>
+  </section>
+
+  <!-- ④ 그림 · 영상 -->
+  <section class="tab" id="t-img">
+    <div class="card"><h2>④ 그림 (ChatGPT) · 영상 (Flow)</h2>
+      <p class="hint"><b>ChatGPT 대화창 하나(그림 방)</b>에서 하세요. 먼저 <b>주인공</b>을 만들고 → 장면 1, 2 … 차례로. 각 칸: 「📋 요청문 복사」 → ChatGPT → 그림 저장 → 「🖼 그림 넣기」.<br>
+      움직이게 하고 싶은 장면만 「✨ 영상」으로 Flow 영상을 넣어요(안 넣으면 그림이 천천히 움직여요). ♻ 표시 장면은 앞 그림을 다시 써요.</p>
+      <button class="btn" id="openGpt">🤖 ChatGPT 열기</button>
+    </div>
+    <h3 class="sec">🧑 주인공</h3>
+    <div id="heroBox" class="list"></div>
+    <h3 class="sec">🎬 장면</h3>
+    <div id="imgList" class="list"></div>
+  </section>
+
+  <!-- ⑤ 효과 -->
+  <section class="tab" id="t-fx">
+    <div class="card"><h2>⑤ 효과</h2>
+      <label class="f">장면이 바뀔 때</label>
+      <button class="btn" id="mixBtn">🎲 골고루 섞기</button>
+      <p class="hint">켜면 장면마다 다른 모양으로 골고루 바뀌어요. 아래에서 한 가지를 누르면 그 모양만 써요.</p>
+      <div class="chips" id="trans"></div>
+      <label class="f">넘어가는 시간</label><div class="chips" id="speed"></div>
+      <label class="f">🎨 색감</label><div class="chips" id="color"></div>
+      <label class="f">✨ 분위기 효과 (영상 전체)</label><div class="chips" id="efx"></div>
+      <label class="chk"><input type="checkbox" id="titleOn"> 🏷 처음 3초에 노래 제목 크게</label>
+      <label class="chk"><input type="checkbox" id="zoom"> 🖼 그림은 천천히 확대</label>
+      <label class="chk"><input type="checkbox" id="fadein"> 처음 검은 화면에서 서서히</label>
+      <label class="chk"><input type="checkbox" id="fadeout"> 끝에 서서히 어두워지기</label>
+    </div>
+  </section>
+
+  <!-- ⑥ 완성 -->
+  <section class="tab" id="t-make">
+    <div class="card"><h2>⑥ 완성본 만들기</h2>
+      <label class="f">화질</label><div class="chips" id="qual"><button data-v="720">보통 720 (빠름)</button><button data-v="1080">선명 1080</button></div>
+      <p class="hint" style="margin-top:12px" id="sum"></p>
+      <button class="btn" id="make">🎞 완성본 만들기</button>
+      <div class="bar"><div id="bar"></div></div><div id="prog" class="hint"></div>
+      <p class="hint">만드는 동안 <b>화면을 켜 두고 이 화면에 있어 주세요.</b> 노래 길이만큼 시간이 걸려요.</p>
+      <video id="out" controls playsinline style="display:none"></video>
+      <button class="btn" id="save" style="display:none">💾 휴대폰에 저장</button>
+      <button class="btn" id="share" style="display:none">📤 카톡 · 다른 앱으로 보내기</button>
+    </div>
+    <div class="card"><h2>🧹 새 뮤직비디오</h2>
+      <p class="hint">지금 작품을 비우고 새로 시작해요. 먼저 완성본을 휴대폰에 저장해 두세요.</p>
+      <button class="btn" id="reset">🧹 새 뮤직비디오 시작</button>
+    </div>
+  </section>
+  <div class="ver">BK공방 뮤직비디오(휴대폰) v0.1 · BK Agent</div>
+</main>
+<div class="foot"><button class="btn y" id="next">다음 ▶</button></div>
+<div id="toast"></div>
+<div id="sheet" class="sheet" style="display:none"><div class="sbox">
+  <h2 id="sTitle">✨ 영상 만들기</h2>
+  <p class="hint" id="sHint"></p>
+  <img id="sImg" alt="">
+  <button class="btn" data-s="0">① 장면 그림을 휴대폰에 저장</button>
+  <button class="btn" data-s="1">② Flow 프롬프트 복사</button>
+  <button class="btn" data-s="2">③ Flow 열기</button>
+  <div class="now" style="margin:10px 0 0;font-size:14px">⚠ Flow에서 꼭 이렇게 해야 <b>내 그림이 그대로 움직여요</b><br>
+    ⓐ 처음 한 번: 위쪽 ＋ 또는 업로드(⬆)로 ①에서 저장한 그림을 Flow에 올리기<br>
+    ⓑ 입력 칸 <b>왼쪽 아래 「＋」</b> → 목록에서 <b>그 그림 누르기</b><br>
+    ⓒ 입력 칸 안에 <b>작은 그림이 붙었는지</b> 꼭 확인<br>
+    ⓓ 설정: <b>Veo 3.1 Lite</b>(10크레딧) · 화면 모양 같게 · 8초<br>
+    ⓔ ②의 프롬프트 붙여넣기 → <b>→</b> → 다 되면 다운로드<br>
+    <span style="color:#b91c1c">✖ 그림이 안 붙은 채로 만들면 다른 사람 영상이 나와요.</span></div>
+  <button class="btn" data-s="3">④ 받은 영상 넣기</button>
+  <button class="btn" data-s="del" id="sDel" style="display:none">🗑 넣은 영상 빼기 (그림으로 되돌리기)</button>
+  <button class="btn" data-s="close">닫기</button>
+</div></div>
+<script src="fx.js"></script>
+<script src="mp4mux.js"></script>
+<script src="music.js"></script>
+<script>if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});</script>
+</body>
+</html>
