@@ -10,18 +10,50 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap">
 <link rel="stylesheet" href="app.css">
+<style>
+.big{position:relative}
+.big.wait{opacity:.5}
+.big.lock{background:#e5e7eb;border-color:#9ca3af;filter:grayscale(1);opacity:.75}
+.big .lk{display:none;position:absolute;right:14px;top:14px;background:#374151;color:#fff;font-size:13px;font-weight:900;padding:4px 10px;border-radius:999px}
+.big.lock .lk{display:block}
+#lic{font-weight:900;color:#6d28d9}
+.dlg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:60;display:flex;align-items:center;justify-content:center;padding:16px}
+.dlg .in{background:#fff;border:2px solid var(--line);border-radius:18px;padding:22px 18px;max-width:440px;text-align:center;line-height:1.65}
+.dlg .in .e{font-size:44px}.dlg h2{margin:6px 0 8px;font-size:19px}.dlg p{margin:0 0 6px;color:#374151;font-size:15px}
+</style>
 </head>
 <body>
 <header>
   <h1>🎬 <b>BK공방</b> 모바일</h1>
-  <div class="sub">휴대폰 하나로 영상 만들기 — 만들고 싶은 것을 고르세요</div>
+  <div class="sub">내 라이선스: <span id="lic">확인 중…</span></div>
 </header>
 <main>
-  <a class="big" href="album.html"><div class="e">📷</div><h2>추억앨범</h2><p>사진 + 노래 + 자막 → 추억 영상. 사진을 Flow로 움직이게 할 수도 있어요.</p></a>
-  <a class="big" href="drama.html"><div class="e">🎭</div><h2>드라마</h2><p>AI로 대본 → ChatGPT로 그림 → Flow로 영상 → 자막·효과 → 숏드라마 완성.</p></a>
-  <div class="big soon"><div class="e">🎵</div><h2>뮤직비디오 <span class="tag">준비 중</span></h2><p>노래 한 곡으로 뮤직비디오. 다음에 만들어요.</p></div>
-  <div class="ver">BK공방 모바일 v0.6 · BK Agent</div>
+  <a class="big wait" href="album.html" data-k="album" data-n="추억앨범"><span class="lk">🔒 잠김</span><div class="e">📷</div><h2>추억앨범</h2><p>사진 + 노래 + 자막 → 추억 영상. 사진을 Flow로 움직이게 할 수도 있어요.</p></a>
+  <a class="big wait" href="drama.html" data-k="drama" data-n="드라마"><span class="lk">🔒 잠김</span><div class="e">🎭</div><h2>드라마</h2><p>AI로 대본 → ChatGPT로 그림 → Flow로 영상 → 자막·효과 → 숏드라마 완성.</p></a>
+  <div class="big soon" data-k="music" data-n="뮤직비디오"><div class="e">🎵</div><h2>뮤직비디오 <span class="tag">준비 중</span></h2><p>노래 한 곡으로 뮤직비디오. 다음에 만들어요.</p></div>
+  <div class="ver">BK공방 모바일 v0.7 · BK Agent</div>
 </main>
-<script>if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});</script>
+<script src="license.js"></script>
+<script>
+(async function () {
+  const NAME = { drama: '드라마', music: '뮤직', album: '추억앨범' };
+  const L = window.BKLIC, R = {};
+  for (const k of ['drama', 'music', 'album', 'pro']) { try { R[k] = !!(L && (await L.check('gb_' + k + '_ok')).ok); } catch (e) { R[k] = false; } }
+  const own = ['drama', 'music', 'album'].filter(k => R[k]);
+  document.getElementById('lic').textContent = R.pro ? 'BK공방 PRO (모두 열림)' : own.length ? 'BK공방 ' + own.map(k => NAME[k]).join(' · ') + ' LITE' : '아직 없음 — 쓰고 싶은 칸을 누르면 라이선스를 넣을 수 있어요';
+  document.querySelectorAll('a.big').forEach(a => { a.classList.remove('wait'); if (!R[a.dataset.k]) a.classList.add('lock'); });
+  document.addEventListener('click', e => {
+    const a = e.target.closest('a.big.lock'); if (!a) return; e.preventDefault();
+    const n = a.dataset.n, d = document.createElement('div'); d.className = 'dlg';
+    d.innerHTML = `<div class="in"><div class="e">🔒</div><h2>「${n}」은(는) 지금 라이선스에 들어 있지 않아요</h2>
+      <p><b>BK공방 ${n} LITE</b> 또는 <b>BK공방 PRO</b>(모두)에 들어 있어요.<br>판매자(BK Agent)에게 카톡으로 문의해 주세요.</p>
+      <button class="btn y" id="dOk">알겠어요</button>
+      <button class="btn" id="dKey">🔑 라이선스를 받았어요 (넣으러 가기)</button></div>`;
+    document.body.appendChild(d);
+    d.onclick = ev => { if (ev.target === d || ev.target.id === 'dOk') d.remove(); if (ev.target.id === 'dKey') location.href = a.getAttribute('href'); };
+  });
+})();
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
 </body>
 </html>
