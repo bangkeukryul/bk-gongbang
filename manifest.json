@@ -1,6 +1,6 @@
 {
-  "name": "BK공방 추억앨범",
-  "short_name": "추억앨범",
+  "name": "BK공방",
+  "short_name": "BK공방",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

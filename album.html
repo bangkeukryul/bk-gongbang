@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BK공방 추억앨범</title>
+<meta name="theme-color" content="#7c3aed">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&family=Black+Han+Sans&family=Gowun+Batang:wght@700&display=swap">
+<style>
+:root{--bg:#eef0f4;--ink:#111827;--sub:#4b5563;--line:#1f2937;--y:#fde047;--yb:#b45309;--p:#7c3aed}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans KR','Malgun Gothic',sans-serif;font-size:17px;-webkit-text-size-adjust:100%}
+header{position:sticky;top:0;z-index:20;background:#fff;border-bottom:2px solid var(--line);border-top:5px solid var(--p);padding:10px 14px}
+header h1{margin:0;font-size:21px;font-weight:900}header h1 b{color:var(--p)}
+header .sub{font-size:13px;color:var(--sub);margin-top:2px}
+nav{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:9px}
+nav button{border:1.5px solid #374151;border-radius:10px;background:#fff;padding:7px 2px;font:inherit;font-size:13px;font-weight:800;color:#374151}
+nav button.on{background:var(--p);border-color:var(--p);color:#fff}
+nav button.done::after{content:' ✓';color:#16a34a}nav button.on.done::after{color:#bbf7d0}
+main{padding:14px 14px 120px;max-width:720px;margin:0 auto}
+.now{background:#fffbea;border:2px solid var(--yb);border-radius:14px;padding:11px 13px;font-weight:700;font-size:15px;line-height:1.55;margin-bottom:14px}
+.card{background:#fff;border:2px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+.card h2{margin:0 0 8px;font-size:19px}
+.hint{color:var(--sub);font-size:14px;line-height:1.6;margin:4px 0 10px}
+.btn{display:block;width:100%;border:2px solid #374151;border-radius:14px;background:#fff;padding:15px;font:inherit;font-size:17px;font-weight:900;color:var(--ink);margin-top:10px;text-align:center}
+.btn.y{background:var(--y);border-color:var(--yb);color:#713f12}
+.btn.on{background:#f3e8ff;border-color:var(--p);color:#6d28d9}
+.btn.sm{display:inline-block;width:auto;padding:9px 13px;font-size:14px;margin:0}
+.tab{display:none}.tab.on{display:block}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ph{background:#fff;border:2px solid var(--line);border-radius:14px;padding:8px;display:flex;flex-direction:column;gap:6px}
+.ph .top{display:flex;align-items:center;justify-content:space-between;font-weight:900}
+.ph .top span{font-size:12px;color:var(--sub);font-weight:600}
+.ph img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;background:#e5e7eb}
+.ph input{width:100%;font:inherit;font-size:14px;padding:8px;border:1.5px solid #374151;border-radius:8px}
+.ph .row{display:flex;gap:5px}.ph .row button{flex:1;border:1.5px solid #374151;border-radius:9px;background:#fff;padding:8px 0;font:inherit;font-weight:900}
+label.f{display:block;font-weight:800;margin:12px 0 6px}
+input[type=text],select,textarea{width:100%;font:inherit;font-size:17px;padding:12px;border:1.5px solid #374151;border-radius:10px;background:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{border:1.5px solid #374151;border-radius:999px;background:#fff;padding:9px 14px;font:inherit;font-size:15px;font-weight:800}
+.chips button.on{background:#f3e8ff;border-color:var(--p);color:#6d28d9}
+.chk{display:flex;gap:10px;align-items:center;font-weight:800;margin-top:12px}.chk input{width:24px;height:24px}
+audio{width:100%;margin-top:10px}
+video{width:100%;border-radius:12px;background:#000;margin-top:12px}
+.bar{height:14px;border-radius:999px;background:#e5e7eb;overflow:hidden;margin-top:12px}.bar>div{height:100%;width:0;background:var(--p)}
+#prog{font-weight:800;margin-top:8px}
+.foot{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:2px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom));z-index:30}
+.foot .btn{margin:0;max-width:720px;margin:0 auto}
+#toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:#111827;color:#fff;padding:11px 16px;border-radius:12px;font-weight:700;display:none;z-index:50;max-width:90%;text-align:center}
+.ph .vbtn{border:1.5px solid var(--p);border-radius:9px;background:#f5f3ff;color:#6d28d9;padding:8px 0;font:inherit;font-size:14px;font-weight:900}
+.ph .vbtn.has{background:#16a34a;border-color:#16a34a;color:#fff}
+.ph .imgw{position:relative}.ph .imgw b{position:absolute;left:6px;top:6px;background:#16a34a;color:#fff;font-size:12px;padding:2px 7px;border-radius:999px}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:60;display:flex;align-items:flex-end;justify-content:center}
+.sbox{background:#fff;border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom));width:100%;max-width:720px;max-height:92vh;overflow:auto}
+.sbox h2{margin:0 0 6px;font-size:19px}.sbox img,.sbox video{width:100%;max-height:28vh;object-fit:contain;background:#111;border-radius:10px}
+.empty{text-align:center;color:var(--sub);padding:18px 0}
+.ver{text-align:center;color:#9ca3af;font-size:12px;margin-top:20px}
+</style>
+</head>
+<body>
+<header>
+  <h1><a href="./" style="text-decoration:none">🏠</a> 📷 BK공방 <b>추억앨범</b></h1>
+  <div class="sub" id="pname">사진 + 노래 + 자막 → 휴대폰에서 바로 영상(MP4)</div>
+  <nav id="nav">
+    <button data-t="photo">① 사진</button><button data-t="music">② 노래</button><button data-t="text">③ 글씨</button><button data-t="fx">④ 효과</button><button data-t="make">⑤ 완성</button>
+  </nav>
+</header>
+<main>
+  <div class="now" id="now"></div>
+
+  <section class="tab" id="t-photo">
+    <div class="card"><h2>① 사진 넣기</h2>
+      <p class="hint">휴대폰 사진을 여러 장 한 번에 고르세요. <b>찍은 날짜 순서</b>로 저절로 정렬돼요. ◀ ▶로 순서를 바꾸고, 사진 아래 칸에 한 줄 자막을 쓸 수 있어요(비워도 돼요).</p>
+      <button class="btn" id="pick">📷 사진 고르기 (여러 장)</button>
+      <div class="chips" style="margin-top:12px"><button class="sm" id="sortDate">📅 날짜순 다시 정렬</button><button class="sm" id="clearAll">🧹 사진 모두 빼기</button></div>
+    </div>
+    <div id="photos" class="grid"></div>
+  </section>
+
+  <section class="tab" id="t-music">
+    <div class="card"><h2>② 노래 넣기</h2>
+      <p class="hint">깔고 싶은 노래(MP3)를 고르세요. 다른 가수의 노래는 유튜브에서 저작권 문제가 생길 수 있어요.</p>
+      <button class="btn" id="pickMusic">🎵 노래 고르기 (MP3)</button>
+      <div id="musicInfo" class="hint"></div><audio id="aud" controls style="display:none"></audio>
+      <label class="chk"><input type="checkbox" id="fit"> 사진 길이를 노래 길이에 맞추기 (추천)</label>
+      <label class="f">사진 한 장 길이 <span id="secV"></span></label>
+      <input type="range" id="sec" min="2" max="10" step="0.5" style="width:100%">
+    </div>
+  </section>
+
+  <section class="tab" id="t-text">
+    <div class="card"><h2>③ 제목 · 끝 글씨</h2>
+      <label class="f">첫 화면 제목 (노랑 큰 글씨)</label><input type="text" id="title" placeholder="예) 우리 가족 2019 ~ 2026">
+      <label class="f">마지막 화면 글씨</label><input type="text" id="endText" placeholder="예) 사랑해요, 우리 가족">
+      <label class="f">사진 자막 자리</label>
+      <div class="chips" id="capPos"><button data-v="low">아래쪽</button><button data-v="mid">가운데</button></div>
+      <p class="hint" style="margin-top:12px">사진마다 자막은 ① 사진에서 써요.</p>
+    </div>
+  </section>
+
+  <section class="tab" id="t-fx">
+    <div class="card"><h2>④ 효과</h2>
+      <p class="hint">안 골라도 부드럽게 넘어가는 영상이 나와요.</p>
+      <label class="f">사진이 바뀔 때</label>
+      <button class="btn" id="mixBtn">🎲 골고루 섞기</button>
+      <p class="hint">켜면 사진마다 다른 모양으로 골고루 바뀌어요. 아래에서 한 가지를 누르면 그 모양만 써요.</p>
+      <div class="chips" id="trans"></div>
+      <label class="f">넘어가는 시간</label><div class="chips" id="speed"></div>
+      <label class="f">🎨 색감</label><div class="chips" id="color"></div>
+      <label class="f">✨ 분위기 효과 (영상 전체)</label><div class="chips" id="efx"></div>
+      <label class="chk"><input type="checkbox" id="zoom"> 🖼 사진 천천히 확대</label>
+      <label class="chk"><input type="checkbox" id="fadein"> 처음 검은 화면에서 서서히</label>
+      <label class="chk"><input type="checkbox" id="fadeout"> 끝에 서서히 어두워지기</label>
+    </div>
+  </section>
+
+  <section class="tab" id="t-make">
+    <div class="card"><h2>⑤ 완성본 만들기</h2>
+      <label class="f">화면 모양</label><div class="chips" id="ratio"><button data-v="9:16">📱 세로 (쇼츠 · 카톡)</button><button data-v="16:9">🖥 가로 (유튜브 · TV)</button></div>
+      <label class="f">화질</label><div class="chips" id="qual"><button data-v="720">보통 720 (빠름)</button><button data-v="1080">선명 1080</button></div>
+      <p class="hint" style="margin-top:12px" id="sum"></p>
+      <button class="btn" id="make">🎞 완성본 만들기</button>
+      <div class="bar"><div id="bar"></div></div><div id="prog" class="hint"></div>
+      <p class="hint">만드는 동안 <b>화면을 켜 두고 이 화면에 있어 주세요.</b> 다른 앱으로 가면 멈춰요.</p>
+      <video id="out" controls playsinline style="display:none"></video>
+      <button class="btn" id="save" style="display:none">💾 휴대폰에 저장</button>
+      <button class="btn" id="share" style="display:none">📤 카톡 · 다른 앱으로 보내기</button>
+    </div>
+  </section>
+  <div class="ver">BK공방 추억앨범(휴대폰) v0.5 · BK Agent</div>
+</main>
+<div class="foot"><button class="btn y" id="next">다음 ▶</button></div>
+<div id="toast"></div>
+<div id="sheet" class="sheet" style="display:none"><div class="sbox">
+  <h2 id="sTitle">✨ 사진을 영상으로</h2>
+  <p class="hint">Google Flow에서 이 사진을 8초 영상으로 만들어 넣어요. <b>노란 버튼을 차례로</b> 누르세요. (권장: Veo 3.1 Lite · 10크레딧)</p>
+  <img id="sImg" alt="">
+  <button class="btn" data-s="0">① 사진을 휴대폰에 저장</button>
+  <button class="btn" data-s="1">② Flow 프롬프트 복사</button>
+  <button class="btn" data-s="2">③ Flow 열기</button>
+  <div class="now" style="margin:10px 0 0;font-size:14px">⚠ Flow에서 꼭 이렇게 해야 <b>내 사진이 그대로 움직여요</b><br>
+    ⓐ 처음 한 번: 위쪽 ＋ 또는 업로드(⬆)로 ①에서 저장한 사진을 Flow에 올리기<br>
+    ⓑ 입력 칸 <b>왼쪽 아래 「＋」</b> → 목록에서 <b>그 사진 누르기</b><br>
+    ⓒ 입력 칸 안에 <b>작은 사진이 붙었는지</b> 꼭 확인<br>
+    ⓓ 「무엇을 만들고 싶으신가요?」에 ②의 프롬프트 붙여넣기 → <b>→</b> 누르기<br>
+    ⓔ 다 되면 영상 누르기 → 다운로드<br>
+    <span style="color:#b91c1c">✖ 입력 칸에 사진이 안 붙은 채로 만들면 다른 사람 영상이 나와요.</span></div>
+  <button class="btn" data-s="3">④ 받은 영상 넣기</button>
+  <button class="btn" data-s="del" id="sDel" style="display:none">🗑 넣은 영상 빼기 (사진으로 되돌리기)</button>
+  <button class="btn" data-s="close">닫기</button>
+</div></div>
+<script src="fx.js"></script>
+<script src="mp4mux.js"></script>
+<script src="album.js"></script>
+<script>if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});</script>
+</body>
+</html>
