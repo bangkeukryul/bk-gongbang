@@ -26,7 +26,7 @@ const fSet = (k, v) => op('files', 'readwrite', s => s.put(v, k));
 const fDel = k => op('files', 'readwrite', s => s.delete(k));
 
 const DEF = () => ({ photos: [], music: null, fit: true, sec: 4, title: '', endText: '', capPos: 'low',
-  fx: { tr: 'fade', mix: '', speed: 'normal', color: 'none', efx: '', zoom: true, fadein: true, fadeout: true }, ratio: '9:16', q: 720, seen: {} });
+  fx: { tr: 'fade', mix: 'all',speed: 'normal', color: 'none', efx: '', zoom: true, fadein: true, fadeout: true }, ratio: '9:16', q: 720, seen: {} });
 let P = DEF(), saveT = 0;
 function save() { clearTimeout(saveT); saveT = setTimeout(() => kvSet('album', P).catch(() => {}), 300); }
 
@@ -89,7 +89,7 @@ async function addPhotos(files) {
 }
 async function delPhoto(i) {
   const p = P.photos[i]; if (!p || !confirm(`${i + 1}번 사진을 뺄까요?`)) return;
-  P.photos.splice(i, 1); fDel('f:' + p.id).catch(() => {}); fDel('t:' + p.id).catch(() => {});
+  P.photos.splice(i, 1); for (const k of ['f:', 't:', 'v:']) fDel(k + p.id).catch(() => {});
   const u = THUMBS.get(p.id); if (u) URL.revokeObjectURL(u); THUMBS.delete(p.id); save(); render();
 }
 function move(i, d) { const j = i + d; if (j < 0 || j >= P.photos.length) return; const a = P.photos; [a[i], a[j]] = [a[j], a[i]]; save(); render(); }
@@ -98,10 +98,55 @@ async function renderPhotos() {
   if (!P.photos.length) { box.innerHTML = '<div class="empty" style="grid-column:1/-1">아직 사진이 없어요</div>'; return; }
   const urls = await Promise.all(P.photos.map(p => thumbUrl(p.id)));
   box.innerHTML = P.photos.map((p, i) => `<div class="ph"><div class="top">${i + 1}번 <span>${new Date(p.when).toLocaleDateString('ko-KR')}</span></div>
-    <img src="${urls[i]}" alt="">
+    <div class="imgw"><img src="${urls[i]}" alt="">${p.vid ? '<b>🎬 영상</b>' : ''}</div>
+    <button class="vbtn ${p.vid ? 'has' : ''}" data-flow="${i}">${p.vid ? '🎬 영상 들어감 ✓' : '✨ 영상으로 (Flow)'}</button>
     <input type="text" data-cap="${i}" placeholder="자막 한 줄 (비워도 돼요)" value="${(p.cap || '').replace(/"/g, '&quot;')}" maxlength="40">
     <div class="row"><button data-mv="${i}" data-d="-1">◀</button><button data-mv="${i}" data-d="1">▶</button><button data-del="${i}">🗑</button></div></div>`).join('');
 }
+
+/* ═════════ ✨ 사진을 영상으로 (Google Flow) ═════════ */
+const FLOW_URL = 'https://labs.google/fx/tools/flow';
+function flowPrompt(p) {
+  const cap = (p.cap || '').trim();
+  return ['첨부한 사진에서 그대로 시작하는 8초짜리 잔잔한 추억 영상이다. 사진 속 사람의 얼굴, 머리, 옷, 배경은 사진과 똑같이 유지한다.',
+    '사진 속 사람들이 자연스럽게 웃거나 살짝 고개를 돌리고, 머리카락과 옷자락이 바람에 조금 흔들린다. 큰 동작은 하지 않는다.',
+    '카메라는 아주 천천히 앞으로 다가간다. 따뜻하고 부드러운 빛.',
+    cap ? `장면 느낌: ${cap}` : '',
+    '아무도 말하지 않는다. 입은 다물고 있다. 소리·음악·자막·화면 글자는 넣지 않는다.'].filter(Boolean).join('\n');
+}
+let SH = -1, SHURL = '';
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); return true; }
+  catch (e) { const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (e2) { /* 실패 */ } a.remove(); return ok; }
+}
+async function openSheet(i) {
+  SH = i; const p = P.photos[i]; if (!p) return;
+  $('sTitle').textContent = `✨ ${i + 1}번 사진을 영상으로`;
+  if (SHURL) URL.revokeObjectURL(SHURL); SHURL = '';
+  const box = $('sImg'), vb = p.vid ? await fGet('v:' + p.id) : null;
+  const old = box.tagName === 'VIDEO' ? box : null, el = document.createElement(vb ? 'video' : 'img'); el.id = 'sImg';
+  if (vb) { SHURL = URL.createObjectURL(vb); el.src = SHURL; el.controls = true; el.muted = true; el.playsInline = true; } else el.src = await thumbUrl(p.id);
+  box.replaceWith(el); if (old) old.removeAttribute('src');
+  $('sheet').style.display = 'flex'; sheetRender();
+}
+function sheetRender() {
+  const p = P.photos[SH]; if (!p) return; const st = p.vid ? 9 : (p.vstep || 0);
+  $('sheet').querySelectorAll('[data-s]').forEach(b => { const k = b.dataset.s; b.classList.toggle('y', String(st) === k); });
+  $('sheet').querySelector('[data-s="3"]').textContent = p.vid ? '④ 다른 영상으로 바꾸기' : '④ 받은 영상 넣기';
+  $('sDel').style.display = p.vid ? 'block' : 'none';
+}
+function closeSheet() { $('sheet').style.display = 'none'; const v = $('sImg'); if (v.tagName === 'VIDEO') v.pause(); if (SHURL) { URL.revokeObjectURL(SHURL); SHURL = ''; } SH = -1; render(); }
+async function sheetAct(k) {
+  const p = P.photos[SH]; if (!p) return;
+  if (k === 'close') return closeSheet();
+  if (k === '0') { const b = await fGet('f:' + p.id); const u = URL.createObjectURL(b), a = document.createElement('a'); a.href = u; a.download = `flow_photo_${SH + 1}.jpg`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); toast('📷 사진을 「다운로드」에 저장했어요 — Flow에서 이 사진을 넣으세요', 3500); p.vstep = 1; }
+  if (k === '1') { const ok = await copyText(flowPrompt(p)); toast(ok ? '📋 프롬프트를 복사했어요 — Flow 입력 칸에 붙여 넣으세요' : '복사가 안 됐어요. 다시 눌러 주세요', 3500); if (ok) p.vstep = 2; }
+  if (k === '2') { window.open(FLOW_URL, '_blank'); p.vstep = 3; }
+  if (k === '3') { vin.onchange = async () => { const f = vin.files[0]; vin.value = ''; if (!f) return; const d = await audioDur(f); if (!d) { toast('이 영상은 읽을 수 없어요 (MP4)'); return; } await fSet('v:' + p.id, f); p.vid = { name: f.name, dur: d }; save(); toast(`🎬 ${SH + 1}번 사진에 영상을 넣었어요`); openSheet(SH); }; vin.click(); return; }
+  if (k === 'del') { if (!confirm('넣은 영상을 빼고 사진으로 되돌릴까요?')) return; await fDel('v:' + p.id); p.vid = null; p.vstep = 0; save(); openSheet(SH); return; }
+  save(); sheetRender();
+}
+const vin = document.createElement('input'); vin.type = 'file'; vin.accept = 'video/*,.mp4';
 
 /* ═════════ 노래 ═════════ */
 async function audioDur(blob) {
@@ -125,23 +170,42 @@ function plan() {
   const td = Math.min({ fast: .5, normal: 1, slow: 1.6 }[P.fx.speed] || 1, per * .45);
   return { N, per, total, td };
 }
-function transFor(i) { if (P.fx.mix && FX.TRANS_SETS[P.fx.mix]) { const s = FX.TRANS_SETS[P.fx.mix]; return s[(i - 1) % s.length]; } return P.fx.tr || 'fade'; }
+// 🎲 골고루 섞기: 모든 전환을 섞인 순서로 하나씩 (바로 넘어가기 · 지지직 같은 거친 것은 빼고)
+const ALLMIX = (() => { const a = Object.keys(FX.TRANS).filter(k => !['cut', 'glitch', 'rgb', 'pixel'].includes(k)); const r = n => { const s = Math.sin(n * 91.7 + 13.1) * 43758.5; return s - Math.floor(s); }; return a.map((k, i) => [r(i), k]).sort((x, y) => x[0] - y[0]).map(x => x[1]); })();
+function transFor(i) { return P.fx.mix ? ALLMIX[(i - 1) % ALLMIX.length] : (P.fx.tr || 'fade'); }
 function outSize() { const s = P.q >= 1080 ? 1080 : 720; return P.ratio === '16:9' ? [Math.round(s * 16 / 9 / 2) * 2, s] : [s, Math.round(s * 16 / 9 / 2) * 2]; }
 
 /* ═════════ 그리기 ═════════ */
-function makeStill(bmp, W, H) {
+const colF = () => (FX.FILTERS[P.fx.color] || ['', ''])[1];
+function drawContain(x, src, W, H) {
+  const iw = src.videoWidth || src.width, ih = src.videoHeight || src.height, s = Math.min(W / iw, H / ih), w = iw * s, h = ih * s;
+  x.filter = colF() || 'none'; x.shadowColor = 'rgba(0,0,0,.5)'; x.shadowBlur = Math.min(W, H) * .03;
+  x.drawImage(src, (W - w) / 2, (H - h) / 2, w, h);
+  x.filter = 'none'; x.shadowBlur = 0;
+}
+/** 흐린 배경 (+ 가운데 사진). bgOnly면 배경만 */
+function makeStill(src, W, H, bgOnly) {
   const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d', { alpha: false });
-  const iw = bmp.width, ih = bmp.height, col = (FX.FILTERS[P.fx.color] || ['', ''])[1];
+  const iw = src.videoWidth || src.width, ih = src.videoHeight || src.height, col = colF();
   const cs = Math.max(W / iw, H / ih) * 1.12;
   x.fillStyle = '#000'; x.fillRect(0, 0, W, H);
   x.filter = (col ? col + ' ' : '') + `blur(${Math.round(Math.min(W, H) / 22)}px) brightness(.55)`;
-  x.drawImage(bmp, (W - iw * cs) / 2, (H - ih * cs) / 2, iw * cs, ih * cs);
-  x.filter = col || 'none';
-  const s = Math.min(W / iw, H / ih), w = iw * s, h = ih * s;
-  x.shadowColor = 'rgba(0,0,0,.5)'; x.shadowBlur = Math.min(W, H) * .03;
-  x.drawImage(bmp, (W - w) / 2, (H - h) / 2, w, h);
-  x.filter = 'none'; x.shadowBlur = 0;
+  x.drawImage(src, (W - iw * cs) / 2, (H - ih * cs) / 2, iw * cs, ih * cs);
+  x.filter = 'none';
+  if (!bgOnly) drawContain(x, src, W, H);
   return c;
+}
+function seek(v, t) {
+  if (Math.abs(v.currentTime - t) < 0.001 && v.readyState >= 2) return Promise.resolve();
+  return new Promise(res => { const to = setTimeout(done, 2500); function done() { clearTimeout(to); v.removeEventListener('seeked', done); res(); } v.addEventListener('seeked', done); v.currentTime = t; });
+}
+function drawVid(e, W, H) { const x = e.c.getContext('2d', { alpha: false }); x.drawImage(e.bg, 0, 0); drawContain(x, e.v, W, H); }
+function freeEntry(e) { if (!e) return; e.c.width = e.c.height = 0; if (e.v) { e.v.removeAttribute('src'); e.v.load(); URL.revokeObjectURL(e.url); e.bg.width = e.bg.height = 0; } }
+/** 🎬 Flow 영상이 든 사진: 지금 시간의 영상 한 장면을 그려 두기 */
+async function vidAt(C, i, t, pl) {
+  const e = C.cache.get(i); if (!e || !e.v) return;
+  const vt = clamp(t - i * pl.per, 0, Math.max(0, (e.v.duration || 8) - .05));
+  if (Math.abs(e.t - vt) < .001) return; await seek(e.v, vt); drawVid(e, C.W, C.H); e.t = vt;
 }
 function mkCtx(rs) {
   const [W, H] = rs, mk = () => { const c = document.createElement('canvas'); c.width = W; c.height = H; return c; };
@@ -149,16 +213,22 @@ function mkCtx(rs) {
 }
 async function ensure(C, i, center) {
   if (!C.cache.has(i)) {
-    const b = await fGet('f:' + P.photos[i].id); const bmp = await createImageBitmap(b);
-    const st = makeStill(bmp, C.W, C.H); bmp.close && bmp.close(); C.cache.set(i, st);
+    const ph = P.photos[i], vb = ph.vid ? await fGet('v:' + ph.id) : null; let e;
+    if (vb) {
+      const url = URL.createObjectURL(vb), v = document.createElement('video'); v.muted = true; v.playsInline = true; v.preload = 'auto'; v.src = url;
+      await new Promise((res, rej) => { v.onloadeddata = res; v.onerror = () => rej(new Error(`${i + 1}번 사진에 넣은 영상을 읽을 수 없어요. 영상을 다시 넣어 주세요.`)); });
+      await seek(v, 0);
+      e = { c: document.createElement('canvas'), v, url, bg: makeStill(v, C.W, C.H, true), t: 0 }; e.c.width = C.W; e.c.height = C.H; drawVid(e, C.W, C.H);
+    } else { const b = await fGet('f:' + ph.id); const bmp = await createImageBitmap(b); e = { c: makeStill(bmp, C.W, C.H) }; bmp.close && bmp.close(); }
+    C.cache.set(i, e);
   }
   // 휴대폰 메모리 아끼기: 지금 사진 앞뒤 하나씩만 남기기
-  for (const k of [...C.cache.keys()]) if (k < center - 1 || k > center + 1) { const c = C.cache.get(k); c.width = c.height = 0; C.cache.delete(k); }
+  for (const k of [...C.cache.keys()]) if (k < center - 1 || k > center + 1) { freeEntry(C.cache.get(k)); C.cache.delete(k); }
   return C.cache.get(i);
 }
-function zoomed(dst, st, k, odd) {
-  const x = dst.getContext('2d', { alpha: false }), W = dst.width, H = dst.height;
-  if (!P.fx.zoom) { x.drawImage(st, 0, 0); return dst; }
+function zoomed(dst, e, k, odd) {
+  const x = dst.getContext('2d', { alpha: false }), W = dst.width, H = dst.height, st = e.c;
+  if (!P.fx.zoom || e.v) { x.drawImage(st, 0, 0); return dst; }
   const kk = odd ? 1 - k : k, s = 1 + .08 * kk;
   x.drawImage(st, W * (1 - s) / 2, H * (1 - s) / 2, W * s, H * s); return dst;
 }
@@ -238,13 +308,14 @@ async function exportMp4(onProg) {
       if (err) throw err;
       const t = f / fps, i = Math.min(pl.N - 1, Math.floor(t / pl.per));
       if (i !== lastI) { lastI = i; if (i > 0) await ensure(C, i - 1, i); await ensure(C, i, i); if (i + 1 < pl.N) await ensure(C, i + 1, i); }
+      await vidAt(C, i, t, pl); if (i > 0 && t - i * pl.per < pl.td) await vidAt(C, i - 1, t, pl);
       drawFrame(C, x, t, pl);
       const vf = new VideoFrame(cv, { timestamp: Math.round(f * 1e6 / fps), duration: fd }); ve.encode(vf, { keyFrame: f % (fps * 2) === 0 }); vf.close();
       while (ve.encodeQueueSize > 6) await sleep(2);
       if (f % 6 === 0 || f === nF - 1) { const el = (performance.now() - t0) / 1000, done = (f + 1) / nF; onProg(done, `🎬 ${Math.round(done * 100)}% · 남은 시간 약 ${fmt(el / done - el)}`); await sleep(0); }
     }
     await ve.flush(); if (err) throw err;
-  } finally { try { ve.close(); } catch (e) { /* 닫힘 */ } for (const c of [cv, C.A, C.B, ...C.cache.values()]) c.width = c.height = 0; }
+  } finally { try { ve.close(); } catch (e) { /* 닫힘 */ } for (const c of [cv, C.A, C.B]) c.width = c.height = 0; C.cache.forEach(freeEntry); C.cache.clear(); }
   return { blob: new Blob(mux.finalize(), { type: 'video/mp4' }), W, H, warning, dur: pl.total };
 }
 async function make() {
@@ -264,10 +335,14 @@ async function make() {
 }
 function fname() { const d = new Date(), z = n => String(n).padStart(2, '0'); return `추억앨범_${d.getFullYear()}${z(d.getMonth() + 1)}${z(d.getDate())}_${z(d.getHours())}${z(d.getMinutes())}.mp4`; }
 function saveFile() { if (!RESULT) return; const a = document.createElement('a'); a.href = RESULT.url; a.download = fname(); document.body.appendChild(a); a.click(); a.remove(); toast('💾 「다운로드」 폴더에 저장했어요 (갤러리에서도 보여요)', 3500); }
+const KAKAO_HELP = '카톡에서 보내는 법: 「💾 휴대폰에 저장」 → 카톡 채팅방 → ＋ → 앨범(또는 파일) → 저장한 영상 고르기';
 async function share() {
-  if (!RESULT) return; const f = new File([RESULT.blob], fname(), { type: 'video/mp4' });
-  if (navigator.canShare && navigator.canShare({ files: [f] })) { try { await navigator.share({ files: [f], title: P.title || '추억앨범' }); } catch (e) { /* 취소 */ } }
-  else toast('이 휴대폰은 바로 보내기가 안 돼요. 「💾 휴대폰에 저장」 후 보내 주세요', 3500);
+  if (!RESULT) return;
+  // 받는 앱(카톡)이 한글 파일 이름을 못 받을 때가 있어 영어 이름으로 보내요
+  const f = new File([RESULT.blob], 'album_' + Date.now() + '.mp4', { type: 'video/mp4', lastModified: Date.now() });
+  if (!navigator.share || !(navigator.canShare && navigator.canShare({ files: [f] }))) { alert('이 휴대폰은 바로 보내기가 안 돼요.\n\n' + KAKAO_HELP); return; }
+  try { await navigator.share({ files: [f] }); }
+  catch (e) { if (e && e.name === 'AbortError') return; alert('바로 보내기가 안 됐어요 (' + (e && e.name || '오류') + ').\n\n' + KAKAO_HELP); }
 }
 
 /* ═════════ 화면 ═════════ */
@@ -313,7 +388,9 @@ function render() {
   if (document.activeElement !== $('endText')) $('endText').value = P.endText;
   setOn('capPos', P.capPos);
   // 효과
-  setOn('trans', P.fx.mix ? '' : P.fx.tr); setOn('mix', P.fx.mix); setOn('speed', P.fx.speed); setOn('color', P.fx.color); setOn('efx', P.fx.efx);
+  setOn('trans', P.fx.mix ? '' : P.fx.tr);
+  $('mixBtn').classList.toggle('on', !!P.fx.mix); $('mixBtn').textContent = P.fx.mix ? '🎲 골고루 섞기 ✓ 켜짐 (누르면 끄기)' : '🎲 골고루 섞기 (꺼짐 · 누르면 켜기)';
+setOn('speed', P.fx.speed); setOn('color', P.fx.color); setOn('efx', P.fx.efx);
   $('zoom').checked = !!P.fx.zoom; $('fadein').checked = !!P.fx.fadein; $('fadeout').checked = !!P.fx.fadeout;
   // 완성
   setOn('ratio', P.ratio); setOn('qual', P.q);
@@ -329,8 +406,8 @@ async function init() {
   fin.onchange = () => { addPhotos(fin.files); fin.value = ''; };
   $('pick').onclick = () => fin.click();
   $('sortDate').onclick = () => { P.photos.sort((a, b) => a.when - b.when); save(); render(); toast('📅 찍은 날짜 순서로 정렬했어요'); };
-  $('clearAll').onclick = () => { if (!P.photos.length || !confirm(`사진 ${P.photos.length}장을 모두 뺄까요?\n(휴대폰 갤러리의 사진은 그대로 있어요)`)) return; for (const p of P.photos) { fDel('f:' + p.id).catch(() => {}); fDel('t:' + p.id).catch(() => {}); } THUMBS.forEach(u => u && URL.revokeObjectURL(u)); THUMBS.clear(); P.photos = []; save(); render(); };
-  $('photos').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; if (b.dataset.del != null) delPhoto(+b.dataset.del); else if (b.dataset.mv != null) move(+b.dataset.mv, +b.dataset.d); });
+  $('clearAll').onclick = () => { if (!P.photos.length || !confirm(`사진 ${P.photos.length}장을 모두 뺄까요?\n(휴대폰 갤러리의 사진은 그대로 있어요)`)) return; for (const p of P.photos) for (const k of ['f:', 't:', 'v:']) fDel(k + p.id).catch(() => {}); THUMBS.forEach(u => u && URL.revokeObjectURL(u)); THUMBS.clear(); P.photos = []; save(); render(); };
+  $('photos').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; if (b.dataset.flow != null) openSheet(+b.dataset.flow); else if (b.dataset.del != null) delPhoto(+b.dataset.del); else if (b.dataset.mv != null) move(+b.dataset.mv, +b.dataset.d); });
   $('photos').addEventListener('input', e => { const c = e.target.dataset.cap; if (c == null) return; P.photos[+c].cap = e.target.value; save(); });
   // 노래
   const min = document.createElement('input'); min.type = 'file'; min.accept = 'audio/*,.mp3,.m4a,.wav';
@@ -346,7 +423,7 @@ async function init() {
   // 효과
   const TR = {}; ['fade', 'dissolve', 'blur', 'lightleak', 'sparkle', 'zoomIn', 'black', 'white', 'slide', 'push', 'wipe', 'circle', 'heart', 'star', 'doors', 'filmburn', 'flip', 'cut'].forEach(k => { if (FX.TRANS[k]) TR[k] = FX.TRANS[k]; });
   chips('trans', TR, P.fx.tr, v => { P.fx.tr = v; P.fx.mix = ''; });
-  chips('mix', { '': '안 섞기', soft: '🌷 부드럽게', classic: '🎞 옛날 영화', fun: '🎈 신나게', strong: '⚡ 강하게' }, P.fx.mix, v => { P.fx.mix = v; });
+  $('mixBtn').onclick = () => { P.fx.mix = P.fx.mix ? '' : 'all'; save(); render(); toast(P.fx.mix ? '🎲 골고루 섞기를 켰어요' : '골고루 섞기를 껐어요'); };
   chips('speed', { fast: '빠르게 0.5초', normal: '보통 1초', slow: '천천히 1.6초' }, P.fx.speed, v => { P.fx.speed = v; });
   const COL = {}; Object.entries(FX.FILTERS).forEach(([k, v]) => { COL[k] = v[0]; });
   chips('color', COL, P.fx.color, v => { P.fx.color = v; });
@@ -357,6 +434,7 @@ async function init() {
   $('ratio').onclick = e => { const b = e.target.closest('button'); if (!b) return; P.ratio = b.dataset.v; save(); render(); };
   $('qual').onclick = e => { const b = e.target.closest('button'); if (!b) return; P.q = +b.dataset.v; save(); render(); };
   $('make').onclick = make; $('save').onclick = saveFile; $('share').onclick = share;
+  $('sheet').onclick = e => { if (e.target.id === 'sheet') return closeSheet(); const b = e.target.closest('[data-s]'); if (b) sheetAct(b.dataset.s); };
   // 단계
   $('nav').onclick = e => { const b = e.target.closest('button'); if (b && !BUSY) show(b.dataset.t); };
   $('next').onclick = () => { const i = TABS.indexOf(TAB); if (TAB === 'photo' && !P.photos.length) { toast('먼저 「📷 사진 고르기」로 사진을 넣어 주세요'); return; } if (i < TABS.length - 1) show(TABS[i + 1]); };
