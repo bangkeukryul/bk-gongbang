@@ -131,7 +131,7 @@ video{width:100%;border-radius:12px;background:#000;margin-top:12px}
       <button class="btn" id="share" style="display:none">📤 카톡 · 다른 앱으로 보내기</button>
     </div>
   </section>
-  <div class="ver">BK공방 추억앨범(휴대폰) v0.3 · BK Agent</div>
+  <div class="ver">BK공방 추억앨범(휴대폰) v0.4 · BK Agent</div>
 </main>
 <div class="foot"><button class="btn y" id="next">다음 ▶</button></div>
 <div id="toast"></div>
@@ -141,7 +141,13 @@ video{width:100%;border-radius:12px;background:#000;margin-top:12px}
   <img id="sImg" alt="">
   <button class="btn" data-s="0">① 사진을 휴대폰에 저장</button>
   <button class="btn" data-s="1">② Flow 프롬프트 복사</button>
-  <button class="btn" data-s="2">③ Flow 열기 (사진 넣고 · 프롬프트 붙여넣기 · 만들기 · 다운로드)</button>
+  <button class="btn" data-s="2">③ Flow 열기</button>
+  <div class="now" style="margin:10px 0 0;font-size:14px">⚠ Flow에서 꼭 이렇게 해야 <b>내 사진이 그대로 움직여요</b><br>
+    ⓐ 입력 칸 아래에서 <b>「프레임」(Frames to Video)</b>을 고르기<br>
+    ⓑ <b>「시작」(첫 프레임) 칸</b>에 ①에서 저장한 사진 넣기<br>
+    ⓒ 화면 비율은 사진과 같게 (세로 사진 = 9:16)<br>
+    ⓓ 프롬프트 붙여넣기 → 만들기 → 다운로드<br>
+    <span style="color:#b91c1c">✖ 「재료」(Ingredients)에 넣거나 글만 넣으면 사진과 다른 새 영상이 나와요.</span></div>
   <button class="btn" data-s="3">④ 받은 영상 넣기</button>
   <button class="btn" data-s="del" id="sDel" style="display:none">🗑 넣은 영상 빼기 (사진으로 되돌리기)</button>
   <button class="btn" data-s="close">닫기</button>
