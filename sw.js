@@ -1,6 +1,6 @@
 // BK공방 추억앨범 — 고칠 때마다 숫자 +1
-const CACHE = 'bk-gongbang-v9';
-const FILES = ['./', 'index.html', 'app.css', 'license.js', 'album.html', 'album.js', 'drama.html', 'drama.js', 'music.html', 'music.js', 'edit/', 'edit/index.html', 'edit/edit.css', 'edit/gb-edit.css', 'edit/edit.js', 'edit/bkkit.js', 'edit/fx.js', 'edit/lib.js', 'edit/mp4mux.js', 'edit/terms.js', 'fx.js', 'mp4mux.js', 'icon-192.png', 'manifest.json'];
+const CACHE = 'bk-gongbang-v10';
+const FILES = ['./', 'index.html', 'app.css', 'license.js', 'auto.html', 'auto.js', 'auto/anchor_shock.jpg', 'auto/anchor_angry.jpg', 'auto/anchor_smug.jpg','album.html', 'album.js', 'drama.html', 'drama.js', 'music.html', 'music.js', 'edit/', 'edit/index.html', 'edit/edit.css', 'edit/gb-edit.css', 'edit/edit.js', 'edit/bkkit.js', 'edit/fx.js', 'edit/lib.js', 'edit/mp4mux.js', 'edit/terms.js', 'fx.js', 'mp4mux.js', 'icon-192.png', 'manifest.json'];
 self.addEventListener('install', e => { self.skipWaiting(); e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES))); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith('bk-gongbang-') && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 // 새 판을 먼저 받고, 인터넷이 없을 때만 저장된 것 쓰기

@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BK공방 자동 쇼츠</title>
+<meta name="theme-color" content="#7c3aed">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&family=Black+Han+Sans&family=Jua&display=swap">
+<link rel="stylesheet" href="app.css">
+<style>
+nav.n4{grid-template-columns:repeat(4,1fr)}
+.kind{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kind button{border:2px solid #374151;border-radius:16px;background:#fff;padding:14px 8px;font:inherit;font-weight:900;font-size:16px;line-height:1.35}
+.kind button .e{font-size:34px;display:block}
+.kind button small{display:block;font-weight:700;font-size:12px;color:var(--sub);margin-top:4px}
+.kind button.on{background:#f3e8ff;border-color:var(--p);color:#6d28d9}
+.kind button.wide{grid-column:1/3}
+.prompter{background:#111827;color:#fff;border-radius:16px;padding:18px;text-align:center;margin-top:10px}
+.prompter .n{color:#fde047;font-weight:900;font-size:14px}
+.prompter .l{font-size:24px;font-weight:900;line-height:1.45;margin:8px 0;word-break:keep-all}
+.prompter .nx{font-size:15px;color:#9ca3af}
+.rec{color:#dc2626;font-weight:900}
+.meta{white-space:pre-wrap;background:#f9fafb;border:1.5px solid #d1d5db;border-radius:10px;padding:10px;font-size:14px;line-height:1.55;max-height:180px;overflow:auto}
+</style>
+<script>/* 🔒 BK공방 PRO 라이선스가 있는 휴대폰에서만 열려요 */window.BK_PROG='gb_pro_ok';window.BK_PNAME='BK공방 자동 쇼츠(PRO)';</script>
+<script src="license.js"></script>
+</head>
+<body>
+<header>
+  <h1><a href="./" class="home">🏠</a> ⚡ BK공방 <b>자동 쇼츠</b></h1>
+  <div class="sub">고르기 → 대본(ChatGPT) → 꾸미기 → 완성·올리기</div>
+  <nav id="nav" class="n4">
+    <button data-t="pick">① 고르기</button><button data-t="plan">② 대본</button><button data-t="deco">③ 꾸미기</button><button data-t="make">④ 완성</button>
+  </nav>
+</header>
+<main>
+  <div class="now" id="now"></div>
+
+  <!-- ① 고르기 -->
+  <section class="tab" id="t-pick">
+    <div class="card"><h2>① 무엇을 만들까요?</h2>
+      <div class="kind" id="kind">
+        <button data-v="satire"><span class="e">📰</span>풍자 뉴스<small>오늘 많이 본 뉴스를 선비 앵커가</small></button>
+        <button data-v="shop"><span class="e">🛍</span>쇼핑 탄생 이야기<small>상품이 처음 생긴 이야기 + 소개</small></button>
+        <button data-v="ref" class="wide"><span class="e">🎯</span>참고 영상처럼 만들기<small>잘 되는 쇼츠 주소를 넣으면 그 풍(구성·말투·속도)으로</small></button>
+      </div>
+    </div>
+    <div class="card" id="box-satire" style="display:none"><h2>📰 풍자 뉴스</h2>
+      <label class="f">주제 (비워 두면 ChatGPT가 오늘 가장 많이 본 뉴스를 찾아요)</label>
+      <input type="text" id="topic" placeholder="예) 종부세 고지서 (비워도 돼요)">
+    </div>
+    <div class="card" id="box-shop" style="display:none"><h2>🛍 쇼핑 탄생 이야기</h2>
+      <label class="f">상품 이름 (꼭)</label><input type="text" id="product" placeholder="예) 스테인리스 텀블러">
+      <label class="f">상품 좋은 점 2~3개 (상세페이지에 적힌 것만)</label><textarea id="strong" rows="3" placeholder="예) 12시간 보온 · 500ml · 식기세척기 가능"></textarea>
+      <label class="f">쿠팡 파트너스 링크 (설명란에 넣어요)</label><input type="text" id="link" placeholder="https://link.coupang.com/...">
+      <button class="btn" id="pickProd">📷 상품 사진 넣기</button><div class="hint" id="prodInfo"></div>
+    </div>
+    <div class="card" id="box-ref" style="display:none"><h2>🎯 참고 영상처럼</h2>
+      <label class="f">참고할 쇼츠 주소 (유튜브에서 「공유 → 링크 복사」)</label>
+      <input type="text" id="ref" placeholder="https://youtube.com/shorts/...">
+      <button class="btn sm" id="pasteRef" style="margin-top:8px">📋 붙여넣기</button>
+      <label class="f">내 주제 (비워 두면 참고 영상과 비슷한 분야의 새 주제로)</label>
+      <input type="text" id="refTopic" placeholder="예) 60대가 꼭 알아야 할 연금 상식">
+      <p class="hint">구성·말투·속도만 따라 하고, <b>내용·대사·그림은 새로</b> 만들어요(베끼면 저작권·반복 콘텐츠 문제).</p>
+    </div>
+    <div class="card" id="box-style"><h2>🎨 스타일 (참고 영상 대신 골라도 돼요)</h2>
+      <div class="chips" id="style"></div>
+      <p class="hint" id="styleHint"></p>
+    </div>
+  </section>
+
+  <!-- ② 대본 -->
+  <section class="tab" id="t-plan">
+    <div class="card"><h2>② 대본 받기 (ChatGPT · 무료)</h2>
+      <p class="hint">아래 노란 버튼 → ChatGPT가 열리면 <b>입력 칸을 길게 눌러 붙여넣기 → 보내기</b>.<br>답이 다 나오면 답 아래 <b>「복사」</b>를 누르고 이 화면으로 돌아와요.</p>
+      <button class="btn" id="copyReq">📋 ChatGPT 요청문 복사 + 열기</button>
+      <button class="btn" id="pasteAns">📥 ChatGPT 답 붙여넣기</button>
+      <textarea id="answer" rows="4" placeholder="붙여넣기 버튼이 안 되면 여기를 길게 눌러 붙여넣기" style="margin-top:10px"></textarea>
+      <button class="btn" id="apply" style="display:none">✅ 대본 넣기</button>
+      <button class="btn" id="copyFix" style="display:none">🧩 모양이 안 맞아요 → 정리 요청문 복사 (같은 ChatGPT 창에 보내기)</button>
+    </div>
+    <div class="card" id="sum" style="display:none"></div>
+  </section>
+
+  <!-- ③ 꾸미기 -->
+  <section class="tab" id="t-deco">
+    <div class="card"><h2>③ 꾸미기 (안 해도 돼요)</h2>
+      <p class="hint">그대로 두면 <b>큰 글씨 화면 + 효과음 + 배경음</b>으로 자동으로 만들어요.</p>
+      <label class="f">🎙 목소리</label>
+      <div class="chips" id="voice"><button data-v="none">목소리 없이 (자막만)</button><button data-v="rec">내 목소리로 읽기</button></div>
+      <div id="recBox" style="display:none">
+        <p class="hint">「녹음 시작」 → 화면의 글을 읽고, 한 줄 다 읽을 때마다 <b>「다음 줄 ▶」</b>. 마지막 줄 뒤에 누르면 끝나요. 자막이 목소리에 딱 맞춰져요.</p>
+        <button class="btn y" id="recBtn">🎙 녹음 시작</button>
+        <div class="prompter" id="prompter" style="display:none"><div class="n" id="pN"></div><div class="l" id="pL"></div><div class="nx" id="pX"></div></div>
+        <div class="hint" id="recInfo"></div>
+      </div>
+      <label class="f">🎵 배경음</label>
+      <div class="chips" id="bgm"><button data-v="beat">경쾌한 기본 음악</button><button data-v="none">없음</button><button data-v="file">내 음악(MP3)</button></div>
+      <div class="hint" id="bgmInfo"></div>
+      <label class="f">속도</label>
+      <div class="chips" id="pace"><button data-v="normal">보통 (어르신 추천)</button><button data-v="fast">빠르게</button></div>
+    </div>
+    <h3 class="sec">🖼 장면 사진 넣기 (선택 · 안 넣으면 글씨 화면)</h3>
+    <div class="list" id="lines"></div>
+  </section>
+
+  <!-- ④ 완성 -->
+  <section class="tab" id="t-make">
+    <div class="card"><h2>④ 완성 · 올리기</h2>
+      <p class="hint" id="mkSum"></p>
+      <button class="btn" id="make">🎞 영상 만들기</button>
+      <div class="bar"><div id="bar"></div></div><div id="prog" class="hint"></div>
+      <p class="hint">만드는 동안 <b>화면을 켜 두고 이 화면에 있어 주세요.</b></p>
+      <video id="out" controls playsinline style="display:none"></video>
+      <button class="btn" id="save" style="display:none">💾 휴대폰에 저장</button>
+    </div>
+    <div class="card" id="upCard" style="display:none"><h2>📺 유튜브에 올리기</h2>
+      <p class="hint">① 노란 버튼 → 제목·설명이 복사되고 보내기 목록이 열려요 → <b>YouTube</b> 고르기<br>
+      ② 유튜브에서 「다음」 → 제목 칸을 <b>길게 눌러 붙여넣기</b> → 「Shorts 업로드」<br>
+      ③ 표지는 맨 앞 장면(큰 글씨 표지)이 자동으로 쓰여요.</p>
+      <div class="meta" id="meta"></div>
+      <button class="btn" id="upBtn">📺 유튜브에 올리기 (제목 복사 + 보내기)</button>
+      <button class="btn sm" id="copyMeta" style="margin-top:8px">📋 제목·설명만 다시 복사</button>
+    </div>
+    <div class="card"><h2>🧹 새로 만들기</h2>
+      <button class="btn" id="reset">🧹 처음부터 새로</button>
+    </div>
+  </section>
+  <div class="ver">BK공방 자동 쇼츠(휴대폰) v0.1 · BK Agent</div>
+</main>
+<div class="foot"><button class="btn y" id="next">다음 ▶</button></div>
+<div id="toast"></div>
+<script src="fx.js"></script>
+<script src="mp4mux.js"></script>
+<script src="auto.js"></script>
+<script>if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});</script>
+</body>
+</html>
