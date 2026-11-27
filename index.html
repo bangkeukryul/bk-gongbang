@@ -55,7 +55,12 @@
     d.onclick = ev => { if (ev.target === d || ev.target.id === 'dOk') d.remove(); if (ev.target.id === 'dKey') location.href = a.getAttribute('href'); };
   });
 })();
-if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  // 새 판이 올라오면 한 번 저절로 새로고침
+  const had = !!navigator.serviceWorker.controller; let done = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (had && !done) { done = true; location.reload(); } });
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(r => r.update()).catch(() => {});
+}
 </script>
 </body>
 </html>
